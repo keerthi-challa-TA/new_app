@@ -1,0 +1,35 @@
+# 1️⃣ Adaptive Query Execution (AQE)
+# Dynamically optimizes shuffle partitions and join strategies
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.adaptive.skewJoin.enabled", "true")
+
+# Example:
+df.join(df2, "id").groupBy("category").agg({"value":"sum"}).show()
+
+# Spark will automatically optimize shuffle partitions & skewed joins
+
+# 2️⃣ Z-Ordering / Liquid Clustering (Databricks Delta)
+# Improves query performance by co-locating related data
+# Works with Delta tables
+from delta.tables import *
+
+delta_table = DeltaTable.forPath(spark, "/path/to/delta-table")
+delta_table.optimize().executeZOrderBy("customer_id", "order_date")
+
+# 3️⃣ Auto Loader (incremental file processing)
+# Efficiently ingest new files in cloud storage
+spark.readStream.format("cloudFiles") \
+    .option("cloudFiles.format", "parquet") \
+    .option("cloudFiles.schemaLocation", "/tmp/schema") \
+    .load("/mnt/data/incoming")
+
+# 4️⃣ Partitioning, Bucketing, Caching (already included)
+# Repartition before shuffle-heavy operations
+df_repart = df.repartition("department")
+df_cached = df_repart.cache()
+df_cached.count()
+
+# 5️⃣ Broadcast Joins
+from pyspark.sql.functions import broadcast
+df.join(broadcast(df_small), "id")
