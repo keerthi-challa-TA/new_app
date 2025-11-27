@@ -1,0 +1,50 @@
+✅ SCD1 (Slowly Changing Dimension Type 1)
+
+SCD1 = UPSERT logic
+
+It does not maintain history.
+
+When new data arrives, based on the key columns, Spark/DB checks whether the record exists:
+
+If record exists → UPDATE (overwrite only the changed columns)
+
+If record does not exist → INSERT (new row)
+
+This is why SCD1 = upsert, not full overwrite.
+
+You can maintain audit columns like:
+
+inserted_timestamp
+
+updated_timestamp
+to track when the row was last updated.
+
+📌 Key point:
+SCD1 overwrites only the changed fields → latest values only → no history kept.
+
+✅ SCD2 (Slowly Changing Dimension Type 2)
+
+SCD2 = Full history tracking
+
+Based on key columns, the process checks if incoming record already exists.
+
+If a new record comes → INSERT it.
+
+If an existing record with changed values arrives:
+1. Close the old record:
+
+is_current = false / is_active = false
+
+Set end_date to the processing date
+2. Insert a new record:
+
+is_current = true
+
+start_date = record arrival date or ADLS ingestion date
+
+end_date = null
+
+This way, old values and new values are both preserved.
+
+📌 Key point:
+SCD2 inserts a new row for every change and closes the previous one → full history maintained.
